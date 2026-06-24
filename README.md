@@ -6,7 +6,7 @@
   <p>
     <img alt="Platform: Windows" src="https://img.shields.io/badge/platform-Windows-2F6BFF" />
     <img alt=".NET 8" src="https://img.shields.io/badge/.NET-8.0-6F42C1" />
-    <img alt="Release: v0.0.1" src="https://img.shields.io/badge/release-v0.0.1-0B8F6A" />
+    <img alt="Release: v0.0.2" src="https://img.shields.io/badge/release-v0.0.2-0B8F6A" />
     <img alt="License" src="https://img.shields.io/badge/license-MIT-0B8F6A" />
   </p>
 </div>
@@ -39,7 +39,7 @@ L/R Balance Lock intentionally avoids anything that would make a tiny utility ri
 
 ## Quick start
 
-1. Download the standalone `LRBalanceLock.exe` from the [v0.0.1 release](https://github.com/n3il666/WindowsBalanceWatchdog/releases/tag/v0.0.1).
+1. Download the standalone `LRBalanceLock.exe` from the [v0.0.2 release](https://github.com/n3il666/WindowsBalanceWatchdog/releases/tag/v0.0.2).
 2. Double-click the executable.
 3. If Windows SmartScreen warns about an unknown publisher, choose **More info** → **Run anyway** only if you trust the build source.
 4. Choose **Default playback device** or a specific playback device.
@@ -50,9 +50,15 @@ L/R Balance Lock intentionally avoids anything that would make a tiny utility ri
 
 ## Download the standalone release
 
-The current standalone release is [L/R Balance Lock v0.0.1](https://github.com/n3il666/WindowsBalanceWatchdog/releases/tag/v0.0.1). Download `LRBalanceLock.exe` from that release's assets and run it directly on Windows 10 or Windows 11.
+The current standalone release is [L/R Balance Lock v0.0.2](https://github.com/n3il666/WindowsBalanceWatchdog/releases/tag/v0.0.2). Download `LRBalanceLock.exe` from that release's assets and run it directly on Windows 10 or Windows 11.
 
 The release executable is self-contained, so it does not require installing the .NET Desktop Runtime separately. It is not code-signed yet, so Windows SmartScreen may show an unknown-publisher warning. Only run the downloaded executable if you trust this repository and release source.
+
+### What is new in v0.0.2
+
+- Improves startup reliability when **Start with Windows** launches the app minimized.
+- Keeps the tray icon responsive during automatic startup by letting the WinForms message loop initialize before audio devices are enumerated and balance-lock services start.
+- Adds a longer startup grace period for minimized Windows logon launches so audio services and playback devices have time to settle before the app refreshes devices and starts monitoring.
 
 ## Using the tray app
 

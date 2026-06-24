@@ -17,7 +17,7 @@ public sealed class MainForm : Form
     private readonly BalanceLockService _balance;
     private readonly StartupService _startup;
     private readonly TrayIconService _tray;
-    private readonly ComboBox _deviceCombo = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 430 };
+    private readonly ComboBox _deviceCombo = new() { DropDownStyle = ComboBoxStyle.DropDownList, Dock = DockStyle.Fill };
     private readonly CheckBox _lockCheck = new() { Text = "Balance Lock", AutoSize = true };
     private readonly CheckBox _startupCheck = new() { Text = "Start with Windows", AutoSize = true };
     private readonly CheckBox _minimizeCheck = new() { Text = "Minimize to tray instead of close", AutoSize = true };
@@ -32,10 +32,12 @@ public sealed class MainForm : Form
         _tray = new TrayIconService(settings, ShowFromTray, ToggleLock, ToggleStartup, Quit);
         Text = "L/R Balance Lock";
         Icon = AppIconFactory.AppIcon;
-        MinimumSize = new Size(640, 520);
-        ClientSize = new Size(680, 540);
+        MinimumSize = new Size(760, 560);
+        ClientSize = new Size(780, 580);
         StartPosition = FormStartPosition.CenterScreen;
         BackColor = WindowBackground;
+        DoubleBuffered = true;
+        ResizeRedraw = true;
         Font = new Font("Segoe UI", 9.75f, FontStyle.Regular, GraphicsUnit.Point);
         BuildUi();
         RefreshDevices();
@@ -63,17 +65,27 @@ public sealed class MainForm : Form
         header.Controls.Add(titleStack, 1, 0);
         root.Controls.Add(header);
 
-        var card = new Panel { Dock = DockStyle.Fill, BackColor = CardBackground, Padding = new Padding(22) };
-        card.Paint += (_, e) => ControlPaint.DrawBorder(e.Graphics, card.ClientRectangle, Border, ButtonBorderStyle.Solid);
+        var card = new Panel { Dock = DockStyle.Fill, BackColor = CardBackground, Padding = new Padding(22), Margin = new Padding(0) };
+        card.Resize += (_, _) => card.Invalidate();
+        card.Paint += (_, e) =>
+        {
+            var borderRectangle = card.ClientRectangle;
+            borderRectangle.Width -= 1;
+            borderRectangle.Height -= 1;
+            using var borderPen = new Pen(Border);
+            e.Graphics.DrawRectangle(borderPen, borderRectangle);
+        };
         var panel = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 12 };
         panel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         panel.Controls.Add(new Label { Text = "Playback device", Font = new Font(Font, FontStyle.Bold), ForeColor = TextPrimary, AutoSize = true });
         panel.Controls.Add(new Label { Text = "Use your default output or pin balance locking to one device.", ForeColor = TextMuted, AutoSize = true, Margin = new Padding(0, 4, 0, 10) });
 
-        var deviceRow = new FlowLayoutPanel { AutoSize = true, FlowDirection = FlowDirection.LeftToRight, Margin = new Padding(0, 0, 0, 18) };
-        deviceRow.Controls.Add(_deviceCombo);
-        deviceRow.Controls.Add(CreateButton("Refresh"));
-        ((Button)deviceRow.Controls[1]).Click += (_, _) => RefreshDevices();
+        var deviceRow = new TableLayoutPanel { Dock = DockStyle.Top, AutoSize = true, ColumnCount = 2, Margin = new Padding(0, 0, 0, 18) };
+        deviceRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        deviceRow.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+        deviceRow.Controls.Add(_deviceCombo, 0, 0);
+        deviceRow.Controls.Add(CreateButton("Refresh"), 1, 0);
+        ((Button)deviceRow.GetControlFromPosition(1, 0)!).Click += (_, _) => RefreshDevices();
         panel.Controls.Add(deviceRow);
 
         StyleStatusLabel(_status, true);
@@ -91,7 +103,7 @@ public sealed class MainForm : Form
         options.Controls.Add(optionStack);
         panel.Controls.Add(options);
 
-        panel.Controls.Add(new Label { Text = "Scope: only the Windows left/right endpoint sliders are touched. Spatial sound, EQ, enhancements, audio routing, and app mixer levels are left alone.", MaximumSize = new Size(570, 0), AutoSize = true, ForeColor = TextMuted, Margin = new Padding(0, 8, 0, 0) });
+        panel.Controls.Add(new Label { Text = "Scope: only the Windows left/right endpoint sliders are touched. Spatial sound, EQ, enhancements, audio routing, and app mixer levels are left alone.", Dock = DockStyle.Top, AutoSize = true, ForeColor = TextMuted, Margin = new Padding(0, 8, 0, 0) });
         card.Controls.Add(panel);
         root.Controls.Add(card);
 
@@ -120,6 +132,7 @@ public sealed class MainForm : Form
             ForeColor = primary ? Color.White : TextPrimary,
             Padding = new Padding(12, 7, 12, 7),
             Margin = new Padding(8, 0, 0, 0),
+            MinimumSize = new Size(0, 36),
             UseVisualStyleBackColor = false
         };
     }

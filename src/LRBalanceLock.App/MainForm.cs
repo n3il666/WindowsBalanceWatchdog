@@ -42,9 +42,23 @@ public sealed class MainForm : Form
         BuildUi();
         RefreshDevices();
         ApplySettingsToUi();
-        _balance.StatusChanged += status => BeginInvoke((MethodInvoker)(() => UpdateStatus(status)));
+        _balance.StatusChanged += OnBalanceStatusChanged;
         _balance.Start();
         if (startMinimized) Shown += (_, _) => Hide();
+    }
+
+    private void OnBalanceStatusChanged(BalanceStatus status)
+    {
+        if (IsDisposed) return;
+
+        if (InvokeRequired)
+        {
+            if (!IsHandleCreated) return;
+            BeginInvoke((MethodInvoker)(() => UpdateStatus(status)));
+            return;
+        }
+
+        UpdateStatus(status);
     }
 
     private void BuildUi()

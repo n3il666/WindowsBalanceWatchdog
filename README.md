@@ -14,14 +14,14 @@
 
 ## Why this exists
 
-Some Windows audio devices occasionally drift into an uneven left/right endpoint balance. **L/R Balance Lock** is a small, local-first MVP that watches the selected playback endpoint and brings the first two channel sliders back together when you ask it to.
+Some Windows audio devices occasionally drift into an uneven left/right endpoint balance. **L/R Balance Lock** is a small, local-first MVP that watches the selected playback endpoint and brings the first two channel sliders back together when you ask it to. Instead of polling on a timer, it corrects once when the app starts or settings change, then reacts to Windows endpoint volume-change notifications.
 
 It does not process your audio stream, install drivers, create virtual devices, collect telemetry, or require administrator rights.
 
 ## Features
 
 - 🎧 Lists active Windows playback devices.
-- ⚖️ Locks the first two endpoint balance channels together.
+- ⚖️ Locks the first two endpoint balance channels together at startup, app launch, device changes, and volume changes.
 - 🖱️ Runs quietly in the system tray with quick toggles.
 - 🚀 Optional per-user **Start with Windows** support.
 - 🔒 Local settings and logs only; no telemetry or network access.

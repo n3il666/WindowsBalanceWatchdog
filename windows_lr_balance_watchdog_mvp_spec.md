@@ -105,23 +105,11 @@ Rationale: the Windows balance UI usually represents per-channel endpoint volume
 
 Important: correction must only use endpoint volume APIs. Do not insert an audio processing layer.
 
-## 7. Polling strategy
+## 7. Correction strategy
 
-MVP can use simple polling instead of event subscriptions.
+Default behavior should avoid actively polling on a timer. When balance lock is enabled, the app should correct balance once at app startup/app launch, whenever the selected device/settings change, and whenever Windows reports an endpoint volume change for the watched device.
 
-Default polling interval:
-
-```text
-1000 ms
-```
-
-Acceptable range:
-
-```text
-250 ms to 5000 ms
-```
-
-The MVP UI does not need to expose the polling interval unless useful for debugging.
+The app can keep the existing polling interval setting only for backward compatibility with older settings files, but normal runtime correction should be event-driven through endpoint volume notifications rather than a periodic loop.
 
 The correction loop should be lightweight and should not noticeably affect CPU or battery.
 
@@ -589,7 +577,7 @@ Responsibilities:
 
 Responsibilities:
 
-- Own polling loop.
+- Subscribe to endpoint volume-change notifications for the watched device.
 - Apply balance correction.
 - Track current status.
 - Expose events/status updates to UI.

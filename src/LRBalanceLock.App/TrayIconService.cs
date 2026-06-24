@@ -25,7 +25,7 @@ public sealed class TrayIconService : IDisposable
 
         _notifyIcon = new NotifyIcon
         {
-            Icon = SystemIcons.Application,
+            Icon = AppIconFactory.AppIcon,
             Text = "L/R Balance Lock: Off",
             Visible = true,
             ContextMenuStrip = menu

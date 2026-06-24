@@ -1,40 +1,67 @@
-# LR Balance Lock
+<div align="center">
+  <img src="assets/logo.svg" alt="L/R Balance Lock logo" width="128" height="128" />
+  <h1>L/R Balance Lock</h1>
+  <p><strong>A tiny Windows tray utility that keeps left and right playback balance centered.</strong></p>
 
-LR Balance Lock is a tiny Windows tray app that keeps the selected playback device's left and right endpoint balance equal. It does **not** process audio, install drivers, change spatial sound, alter EQ, or route audio through a virtual device.
+  <p>
+    <img alt="Platform: Windows" src="https://img.shields.io/badge/platform-Windows-2F6BFF" />
+    <img alt=".NET 8" src="https://img.shields.io/badge/.NET-8.0-6F42C1" />
+    <img alt="License" src="https://img.shields.io/badge/license-MIT-0B8F6A" />
+  </p>
+</div>
 
-## What it does
+---
 
-- Lists active Windows playback devices.
-- Lets you choose the default playback device or a specific device.
-- Polls the selected endpoint and keeps the first two channel balance sliders equal.
-- Uses the current endpoint master volume scalar when correcting imbalance.
-- Runs in the system tray with a menu for opening, toggling balance lock, toggling startup, and quitting.
-- Stores settings and logs locally per user.
+## Why this exists
 
-## What it does not do
+Some Windows audio devices occasionally drift into an uneven left/right endpoint balance. **L/R Balance Lock** is a small, local-first MVP that watches the selected playback endpoint and brings the first two channel sliders back together when you ask it to.
 
-- No audio DSP, EQ, enhancement, resampling, routing, recording, telemetry, or network access.
+It does not process your audio stream, install drivers, create virtual devices, collect telemetry, or require administrator rights.
+
+## Features
+
+- 🎧 Lists active Windows playback devices.
+- ⚖️ Locks the first two endpoint balance channels together.
+- 🖱️ Runs quietly in the system tray with quick toggles.
+- 🚀 Optional per-user **Start with Windows** support.
+- 🔒 Local settings and logs only; no telemetry or network access.
+- 🧰 Safe defaults: balance locking is off on first launch.
+
+## Non-goals
+
+L/R Balance Lock intentionally avoids anything that would make a tiny utility risky or invasive:
+
+- No audio DSP, EQ, enhancement, resampling, recording, telemetry, or network access.
 - No virtual audio devices, drivers, APOs, or Windows services.
 - No admin rights required.
-- No changes to spatial sound, device effects, exclusive mode, app volume mixer values, default devices, sample rate, bit depth, microphone settings, or Bluetooth profiles.
+- No changes to spatial sound, device effects, exclusive mode, app mixer values, default devices, sample rate, bit depth, microphone settings, or Bluetooth profiles.
 
-## Quick start from a release build
+## Quick start
 
 1. Download or build `LRBalanceLock.exe` on Windows.
-2. Double-click `LRBalanceLock.exe`.
-3. If Windows SmartScreen warns about an unknown publisher, choose **More info** and then **Run anyway** only if you trust the build source.
-4. Balance lock is off by default on first launch, so audio settings are not modified until you enable it.
+2. Double-click the executable.
+3. If Windows SmartScreen warns about an unknown publisher, choose **More info** → **Run anyway** only if you trust the build source.
+4. Choose **Default playback device** or a specific playback device.
+5. Enable **Balance Lock**.
+6. Close the window to keep the app running in the tray.
 
-## Use
+> Balance locking is disabled by default on first launch, so no audio setting is modified until you enable it.
 
-1. Choose `Default playback device` or a specific playback device.
-2. Turn on **Balance Lock**.
-3. Close the window to keep the app running in the tray.
-4. Use the tray icon to reopen, toggle lock, toggle start with Windows, or quit.
+## Using the tray app
+
+The tray icon lets you:
+
+- Reopen the main window.
+- Toggle balance locking.
+- Toggle start with Windows.
+- See the selected device.
+- Quit the app fully.
+
+Closing the main window minimizes to the tray when **Minimize to tray instead of close** is enabled.
 
 ## Start with Windows
 
-The **Start with Windows** toggle writes a current-user registry Run entry:
+The **Start with Windows** toggle writes this current-user registry Run entry:
 
 ```text
 HKCU\Software\Microsoft\Windows\CurrentVersion\Run\LRBalanceLock
@@ -44,14 +71,14 @@ The entry launches the app with `--minimized` and does not require administrator
 
 ## Settings and logs
 
-- Settings: `%AppData%\LRBalanceLock\settings.json`
-- Logs: `%AppData%\LRBalanceLock\logs\app.log`
+| Item | Location |
+| --- | --- |
+| Settings | `%AppData%\LRBalanceLock\settings.json` |
+| Logs | `%AppData%\LRBalanceLock\logs\app.log` |
 
 Corrupt settings are ignored and safe defaults are loaded.
 
-## Build and try locally on Windows
-
-These steps are intended for a local Windows checkout after the PR is merged.
+## Build from source
 
 ### Prerequisites
 
@@ -65,20 +92,11 @@ Confirm the SDK is installed:
 dotnet --version
 ```
 
-### Clone or update the repository
-
-If you do not already have the repository locally:
+### Clone
 
 ```powershell
 git clone <repository-url>
 cd WindowsBalanceWatchdog
-```
-
-If you already have it locally after merging the PR:
-
-```powershell
-git checkout main
-git pull
 ```
 
 ### Restore, build, and test
@@ -89,9 +107,7 @@ dotnet build LRBalanceLock.sln -c Release
 dotnet test LRBalanceLock.sln -c Release
 ```
 
-### Publish a self-contained `.exe`
-
-This creates a Windows x64 build that can run on a machine without installing the .NET runtime separately:
+### Publish a self-contained Windows x64 executable
 
 ```powershell
 dotnet publish src/LRBalanceLock.App/LRBalanceLock.App.csproj `
@@ -103,22 +119,28 @@ dotnet publish src/LRBalanceLock.App/LRBalanceLock.App.csproj `
   -o .\dist\LRBalanceLock-win-x64
 ```
 
-The executable will be here:
+The executable will be written to:
 
 ```powershell
 .\dist\LRBalanceLock-win-x64\LRBalanceLock.exe
 ```
 
-### Try the published app
+## Manual release smoke test
 
-```powershell
-.\dist\LRBalanceLock-win-x64\LRBalanceLock.exe
-```
+Before publishing a release build:
 
-When testing for the first time:
+1. Launch `LRBalanceLock.exe` and confirm the window opens fully without resizing.
+2. Confirm the taskbar/window/tray icon is visible.
+3. Leave **Balance Lock** off and choose a playback device.
+4. Turn **Balance Lock** on.
+5. Change the Windows left/right balance for that playback device and confirm the app restores equal values.
+6. Close the window and confirm the tray icon remains available.
+7. Reopen from the tray icon and then choose **Quit**.
 
-1. Leave **Balance Lock** off and confirm the window opens.
-2. Choose **Default playback device** or a specific playback device.
-3. Turn on **Balance Lock**.
-4. Change the Windows left/right balance for that playback device and confirm the app brings the first two channels back together.
-5. Use the tray icon to reopen the window or quit the app.
+## Privacy and safety
+
+L/R Balance Lock is local-only. It stores settings and logs under your Windows user profile and does not send data anywhere.
+
+## License
+
+MIT. See [LICENSE](LICENSE).

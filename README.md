@@ -18,9 +18,12 @@ LR Balance Lock is a tiny Windows tray app that keeps the selected playback devi
 - No admin rights required.
 - No changes to spatial sound, device effects, exclusive mode, app volume mixer values, default devices, sample rate, bit depth, microphone settings, or Bluetooth profiles.
 
-## Run
+## Quick start from a release build
 
-Build or publish the app on Windows, then run `LRBalanceLock.exe`. Balance lock is off by default on first launch so audio settings are not modified until you enable it.
+1. Download or build `LRBalanceLock.exe` on Windows.
+2. Double-click `LRBalanceLock.exe`.
+3. If Windows SmartScreen warns about an unknown publisher, choose **More info** and then **Run anyway** only if you trust the build source.
+4. Balance lock is off by default on first launch, so audio settings are not modified until you enable it.
 
 ## Use
 
@@ -46,23 +49,76 @@ The entry launches the app with `--minimized` and does not require administrator
 
 Corrupt settings are ignored and safe defaults are loaded.
 
-## Build from source
+## Build and try locally on Windows
 
-Requires the .NET 8 SDK on Windows.
+These steps are intended for a local Windows checkout after the PR is merged.
+
+### Prerequisites
+
+- Windows 10 or Windows 11.
+- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0).
+- PowerShell.
+
+Confirm the SDK is installed:
+
+```powershell
+dotnet --version
+```
+
+### Clone or update the repository
+
+If you do not already have the repository locally:
+
+```powershell
+git clone <repository-url>
+cd WindowsBalanceWatchdog
+```
+
+If you already have it locally after merging the PR:
+
+```powershell
+git checkout main
+git pull
+```
+
+### Restore, build, and test
 
 ```powershell
 dotnet restore
-dotnet build -c Release
+dotnet build LRBalanceLock.sln -c Release
+dotnet test LRBalanceLock.sln -c Release
 ```
 
-Publish a portable self-contained Windows x64 build:
+### Publish a self-contained `.exe`
+
+This creates a Windows x64 build that can run on a machine without installing the .NET runtime separately:
 
 ```powershell
-dotnet publish src/LRBalanceLock.App/LRBalanceLock.App.csproj -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true -o dist
+dotnet publish src/LRBalanceLock.App/LRBalanceLock.App.csproj `
+  -c Release `
+  -r win-x64 `
+  --self-contained true `
+  /p:PublishSingleFile=true `
+  /p:IncludeNativeLibrariesForSelfExtract=true `
+  -o .\dist\LRBalanceLock-win-x64
 ```
 
-Run tests:
+The executable will be here:
 
 ```powershell
-dotnet test
+.\dist\LRBalanceLock-win-x64\LRBalanceLock.exe
 ```
+
+### Try the published app
+
+```powershell
+.\dist\LRBalanceLock-win-x64\LRBalanceLock.exe
+```
+
+When testing for the first time:
+
+1. Leave **Balance Lock** off and confirm the window opens.
+2. Choose **Default playback device** or a specific playback device.
+3. Turn on **Balance Lock**.
+4. Change the Windows left/right balance for that playback device and confirm the app brings the first two channels back together.
+5. Use the tray icon to reopen the window or quit the app.

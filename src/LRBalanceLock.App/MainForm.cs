@@ -32,8 +32,8 @@ public sealed class MainForm : Form
         _tray = new TrayIconService(settings, ShowFromTray, ToggleLock, ToggleStartup, Quit);
         Text = "L/R Balance Lock";
         Icon = AppIconFactory.AppIcon;
-        MinimumSize = new Size(760, 560);
-        ClientSize = new Size(780, 580);
+        MinimumSize = new Size(840, 640);
+        ClientSize = new Size(860, 660);
         StartPosition = FormStartPosition.CenterScreen;
         BackColor = WindowBackground;
         DoubleBuffered = true;
@@ -103,7 +103,6 @@ public sealed class MainForm : Form
         options.Controls.Add(optionStack);
         panel.Controls.Add(options);
 
-        panel.Controls.Add(new Label { Text = "Scope: only the Windows left/right endpoint sliders are touched. Spatial sound, EQ, enhancements, audio routing, and app mixer levels are left alone.", Dock = DockStyle.Top, AutoSize = true, ForeColor = TextMuted, Margin = new Padding(0, 8, 0, 0) });
         card.Controls.Add(panel);
         root.Controls.Add(card);
 

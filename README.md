@@ -111,7 +111,7 @@ dotnet test LRBalanceLock.sln -c Release
 
 The release build is intentionally self-contained so users can run `LRBalanceLock.exe` without installing the .NET Desktop Runtime first. Because this is a Windows Forms app, self-contained publishing must carry the .NET Windows desktop runtime with the app; that overhead cannot be reduced to the size of a native-only utility without rewriting the UI/runtime stack.
 
-To keep the standalone executable as small and non-scary as practical, the project defaults to a compressed single-file publish, disables ReadyToRun expansion, omits debug symbols, and avoids trimming because Windows Forms is not reliably trim-safe.
+To keep the standalone executable as small and non-scary as practical, the project defaults to a compressed single-file publish, bundles native libraries for runtime self-extraction, disables ReadyToRun expansion, omits debug symbols, and avoids trimming because Windows Forms is not reliably trim-safe.
 
 ```powershell
 dotnet publish src/LRBalanceLock.App/LRBalanceLock.App.csproj `
@@ -120,6 +120,7 @@ dotnet publish src/LRBalanceLock.App/LRBalanceLock.App.csproj `
   --self-contained true `
   /p:PublishSingleFile=true `
   /p:EnableCompressionInSingleFile=true `
+  /p:IncludeNativeLibrariesForSelfExtract=true `
   /p:PublishReadyToRun=false `
   -o .\dist\LRBalanceLock-win-x64
 ```
@@ -129,6 +130,8 @@ The self-contained executable will be written to:
 ```powershell
 .\dist\LRBalanceLock-win-x64\LRBalanceLock.exe
 ```
+
+This configuration is intended to produce a release that can be distributed as just `LRBalanceLock.exe`. If the publish folder still contains additional files after publishing, treat that as a sign that one of the current dependencies or SDK targets could not be embedded safely; verify the executable from a clean folder before deleting any generated sidecar files.
 
 For comparison during development only, a framework-dependent publish is much smaller but requires the target PC to already have the .NET 8 Desktop Runtime:
 

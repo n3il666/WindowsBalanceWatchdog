@@ -24,7 +24,10 @@ public sealed class MainForm : Form
     private readonly Label _status = new() { AutoSize = true };
     private readonly Label _lastCorrection = new() { AutoSize = true };
     private readonly Label _channels = new() { AutoSize = true };
+    private readonly bool _startMinimized;
     private bool _allowExit;
+    private bool _runtimeStarted;
+    private System.Windows.Forms.Timer? _startupTimer;
 
     public MainForm(AppSettings settings, SettingsService settingsService, AudioDeviceService devices, BalanceLockService balance, StartupService startup, bool startMinimized)
     {
@@ -39,12 +42,36 @@ public sealed class MainForm : Form
         DoubleBuffered = true;
         ResizeRedraw = true;
         Font = new Font("Segoe UI", 9.75f, FontStyle.Regular, GraphicsUnit.Point);
+        _startMinimized = startMinimized;
         BuildUi();
-        RefreshDevices();
         ApplySettingsToUi();
         _balance.StatusChanged += OnBalanceStatusChanged;
+        Shown += OnShown;
+    }
+
+    private void OnShown(object? sender, EventArgs e)
+    {
+        if (_startMinimized) Hide();
+
+        var startupDelay = _startMinimized ? TimeSpan.FromSeconds(10) : TimeSpan.FromMilliseconds(1);
+        _startupTimer = new System.Windows.Forms.Timer { Interval = (int)startupDelay.TotalMilliseconds };
+        _startupTimer.Tick += (_, _) =>
+        {
+            _startupTimer?.Stop();
+            _startupTimer?.Dispose();
+            _startupTimer = null;
+            StartRuntimeServices();
+        };
+        _startupTimer.Start();
+    }
+
+    private void StartRuntimeServices()
+    {
+        if (_runtimeStarted || IsDisposed) return;
+        _runtimeStarted = true;
+        RefreshDevices();
+        ApplySettingsToUi();
         _balance.Start();
-        if (startMinimized) Shown += (_, _) => Hide();
     }
 
     private void OnBalanceStatusChanged(BalanceStatus status)
@@ -210,6 +237,6 @@ public sealed class MainForm : Form
     protected override void OnFormClosing(FormClosingEventArgs e)
     {
         if (!_allowExit && _settings.MinimizeToTrayOnClose) { e.Cancel = true; Hide(); return; }
-        _tray.Dispose(); _balance.Dispose(); base.OnFormClosing(e);
+        _startupTimer?.Dispose(); _tray.Dispose(); _balance.Dispose(); base.OnFormClosing(e);
     }
 }

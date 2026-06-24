@@ -2,9 +2,9 @@ namespace LRBalanceLock.App;
 
 internal static class AppIconFactory
 {
-    private static readonly Lazy<Icon> Icon = new(CreateIcon);
+    private static readonly Lazy<Icon> LazyIcon = new(CreateIcon);
 
-    public static Icon AppIcon => Icon.Value;
+    public static Icon AppIcon => LazyIcon.Value;
 
     private static Icon CreateIcon()
     {
@@ -35,11 +35,23 @@ internal static class AppIconFactory
         graphics.FillEllipse(shadowBrush, 26, 21, 15, 25);
         graphics.FillEllipse(knobBrush, 25, 20, 15, 24);
 
-        using var font = new Font(SystemFonts.MessageBoxFont.FontFamily, 8f, FontStyle.Bold, GraphicsUnit.Point);
+        var fontFamily = SystemFonts.MessageBoxFont?.FontFamily ?? FontFamily.GenericSansSerif;
+        using var font = new Font(fontFamily, 8f, FontStyle.Bold, GraphicsUnit.Point);
         using var textBrush = new SolidBrush(Color.FromArgb(235, 255, 255, 255));
         graphics.DrawString("L", font, textBrush, 13, 42);
         graphics.DrawString("R", font, textBrush, 44, 42);
 
-        return Icon.FromHandle(bitmap.GetHicon());
+        var iconHandle = bitmap.GetHicon();
+        try
+        {
+            return (Icon)System.Drawing.Icon.FromHandle(iconHandle).Clone();
+        }
+        finally
+        {
+            DestroyIcon(iconHandle);
+        }
     }
+
+    [System.Runtime.InteropServices.DllImport("user32.dll", SetLastError = true)]
+    private static extern bool DestroyIcon(IntPtr hIcon);
 }

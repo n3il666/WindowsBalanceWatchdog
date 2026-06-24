@@ -58,6 +58,16 @@ public sealed class AudioSafetyTests
         Assert.DoesNotContain("Registry.LocalMachine", startupSource, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void BalanceLockServiceUsesVolumeNotificationsInsteadOfPollingLoop()
+    {
+        var source = File.ReadAllText(Path.Combine(RepositoryRoot, "src", "LRBalanceLock.App", "BalanceLockService.cs"));
+
+        Assert.Contains("OnVolumeNotification", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("Task.Delay", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("PollingIntervalMs", source, StringComparison.Ordinal);
+    }
+
     private static string FindRepositoryRoot()
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);

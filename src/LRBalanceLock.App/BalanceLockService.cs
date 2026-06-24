@@ -1,4 +1,5 @@
 using LRBalanceLock.App.Models;
+using NAudio.CoreAudioApi;
 
 namespace LRBalanceLock.App;
 
@@ -7,8 +8,8 @@ public sealed class BalanceLockService : IDisposable
     private readonly AudioDeviceService _devices;
     private readonly LoggingService _log;
     private readonly object _sync = new();
-    private CancellationTokenSource? _cts;
     private AppSettings _settings;
+    private MMDevice? _watchedDevice;
     private const float Tolerance = 0.005f;
 
     public event Action<BalanceStatus>? StatusChanged;
@@ -21,29 +22,31 @@ public sealed class BalanceLockService : IDisposable
         _settings = settings;
     }
 
-    public void UpdateSettings(AppSettings settings) => _settings = settings;
+    public void UpdateSettings(AppSettings settings)
+    {
+        lock (_sync)
+        {
+            _settings = settings;
+            ResetWatchedDevice();
+            BalanceNow();
+        }
+    }
 
     public void Start()
     {
         lock (_sync)
         {
-            if (_cts != null) return;
-            _cts = new CancellationTokenSource();
-            _ = Task.Run(() => LoopAsync(_cts.Token));
+            BalanceNow();
         }
     }
 
-    private async Task LoopAsync(CancellationToken token)
+    private void BalanceNow()
     {
-        while (!token.IsCancellationRequested)
+        try { Tick(); }
+        catch (Exception ex)
         {
-            try { Tick(); }
-            catch (Exception ex)
-            {
-                _log.Error(ex, "Audio device temporarily unavailable");
-                Publish(new BalanceStatus("Audio device temporarily unavailable", null, null, CurrentStatus.LastCorrection, null));
-            }
-            await Task.Delay(Math.Clamp(_settings.PollingIntervalMs, 250, 5000), token).ContinueWith(_ => { });
+            _log.Error(ex, "Audio device temporarily unavailable");
+            Publish(new BalanceStatus("Audio device temporarily unavailable", null, null, CurrentStatus.LastCorrection, null));
         }
     }
 
@@ -51,11 +54,12 @@ public sealed class BalanceLockService : IDisposable
     {
         if (!_settings.BalanceLockEnabled)
         {
+            ResetWatchedDevice();
             Publish(CurrentStatus with { State = "Disabled" });
             return;
         }
 
-        using var device = _devices.ResolveDevice(_settings);
+        var device = GetWatchedDevice();
         if (device is null)
         {
             Publish(new BalanceStatus("Waiting for device...", null, null, CurrentStatus.LastCorrection, _settings.SelectedDeviceFriendlyName));
@@ -83,6 +87,35 @@ public sealed class BalanceLockService : IDisposable
         Publish(new BalanceStatus(state, left, right, lastCorrection, device.FriendlyName));
     }
 
+    private MMDevice? GetWatchedDevice()
+    {
+        if (_watchedDevice is not null) return _watchedDevice;
+
+        _watchedDevice = _devices.ResolveDevice(_settings);
+        if (_watchedDevice is not null)
+        {
+            _watchedDevice.AudioEndpointVolume.OnVolumeNotification += OnVolumeNotification;
+        }
+
+        return _watchedDevice;
+    }
+
+    private void OnVolumeNotification(AudioVolumeNotificationData data)
+    {
+        lock (_sync)
+        {
+            BalanceNow();
+        }
+    }
+
+    private void ResetWatchedDevice()
+    {
+        if (_watchedDevice is null) return;
+        _watchedDevice.AudioEndpointVolume.OnVolumeNotification -= OnVolumeNotification;
+        _watchedDevice.Dispose();
+        _watchedDevice = null;
+    }
+
     private void Publish(BalanceStatus status)
     {
         CurrentStatus = status;
@@ -91,7 +124,9 @@ public sealed class BalanceLockService : IDisposable
 
     public void Dispose()
     {
-        _cts?.Cancel();
-        _cts?.Dispose();
+        lock (_sync)
+        {
+            ResetWatchedDevice();
+        }
     }
 }

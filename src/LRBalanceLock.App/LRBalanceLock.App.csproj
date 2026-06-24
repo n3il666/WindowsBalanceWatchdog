@@ -9,8 +9,45 @@
     <AssemblyName>LRBalanceLock</AssemblyName>
     <RootNamespace>LRBalanceLock.App</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <GeneratedAppIcon>$(MSBuildProjectDirectory)/obj/$(Configuration)/$(TargetFramework)/$(RuntimeIdentifier)/generated-app.ico</GeneratedAppIcon>
+    <ApplicationIcon>$(GeneratedAppIcon)</ApplicationIcon>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <PublishReadyToRun>false</PublishReadyToRun>
+    <PublishTrimmed>false</PublishTrimmed>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
+
+  <UsingTask
+    TaskName="DecodeBase64File"
+    TaskFactory="RoslynCodeTaskFactory"
+    AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <InputFile ParameterType="System.String" Required="true" />
+      <OutputFile ParameterType="System.String" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System" />
+      <Using Namespace="System.IO" />
+      <Code Type="Fragment" Language="cs"><![CDATA[
+        var outputDirectory = Path.GetDirectoryName(OutputFile);
+        if (!string.IsNullOrEmpty(outputDirectory))
+        {
+            Directory.CreateDirectory(outputDirectory);
+        }
+        var base64 = File.ReadAllText(InputFile).Trim();
+        File.WriteAllBytes(OutputFile, Convert.FromBase64String(base64));
+      ]]></Code>
+    </Task>
+  </UsingTask>
+
+  <Target Name="GenerateApplicationIcon" BeforeTargets="CoreCompile" Inputs="Assets\app.ico.b64" Outputs="$(GeneratedAppIcon)">
+    <DecodeBase64File InputFile="Assets\app.ico.b64" OutputFile="$(GeneratedAppIcon)" />
+  </Target>
+
   <ItemGroup>
     <PackageReference Include="NAudio" Version="2.2.1" />
   </ItemGroup>

@@ -107,7 +107,11 @@ dotnet build LRBalanceLock.sln -c Release
 dotnet test LRBalanceLock.sln -c Release
 ```
 
-### Publish a self-contained Windows x64 executable
+### Publish the release executable
+
+The release build is intentionally self-contained so users can run `LRBalanceLock.exe` without installing the .NET Desktop Runtime first. Because this is a Windows Forms app, self-contained publishing must carry the .NET Windows desktop runtime with the app; that overhead cannot be reduced to the size of a native-only utility without rewriting the UI/runtime stack.
+
+To keep the standalone executable as small and non-scary as practical, the project defaults to a compressed single-file publish, disables ReadyToRun expansion, omits debug symbols, and avoids trimming because Windows Forms is not reliably trim-safe.
 
 ```powershell
 dotnet publish src/LRBalanceLock.App/LRBalanceLock.App.csproj `
@@ -115,14 +119,26 @@ dotnet publish src/LRBalanceLock.App/LRBalanceLock.App.csproj `
   -r win-x64 `
   --self-contained true `
   /p:PublishSingleFile=true `
-  /p:IncludeNativeLibrariesForSelfExtract=true `
+  /p:EnableCompressionInSingleFile=true `
+  /p:PublishReadyToRun=false `
   -o .\dist\LRBalanceLock-win-x64
 ```
 
-The executable will be written to:
+The self-contained executable will be written to:
 
 ```powershell
 .\dist\LRBalanceLock-win-x64\LRBalanceLock.exe
+```
+
+For comparison during development only, a framework-dependent publish is much smaller but requires the target PC to already have the .NET 8 Desktop Runtime:
+
+```powershell
+dotnet publish src/LRBalanceLock.App/LRBalanceLock.App.csproj `
+  -c Release `
+  -r win-x64 `
+  --self-contained false `
+  /p:PublishSingleFile=false `
+  -o .\dist\LRBalanceLock-win-x64-framework-dependent
 ```
 
 ## Manual release smoke test

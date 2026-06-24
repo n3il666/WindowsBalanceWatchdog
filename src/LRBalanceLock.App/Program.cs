@@ -7,6 +7,11 @@ internal static class Program
     {
         ApplicationConfiguration.Initialize();
         var log = new LoggingService();
+        Application.ThreadException += (_, e) => log.Error(e.Exception, "Unhandled UI thread exception");
+        AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+        {
+            if (e.ExceptionObject is Exception ex) log.Error(ex, "Unhandled application exception");
+        };
         log.Info("App start");
         var settingsService = new SettingsService(log);
         var settings = settingsService.Load();

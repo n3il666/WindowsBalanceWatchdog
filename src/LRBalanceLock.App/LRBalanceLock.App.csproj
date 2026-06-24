@@ -9,6 +9,7 @@
     <AssemblyName>LRBalanceLock</AssemblyName>
     <RootNamespace>LRBalanceLock.App</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
     <GeneratedAppIcon>$(MSBuildProjectDirectory)/obj/$(Configuration)/$(TargetFramework)/$(RuntimeIdentifier)/generated-app.ico</GeneratedAppIcon>
     <ApplicationIcon>$(GeneratedAppIcon)</ApplicationIcon>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>

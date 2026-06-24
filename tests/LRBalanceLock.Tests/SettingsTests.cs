@@ -1,4 +1,5 @@
 using LRBalanceLock.App.Models;
+using Xunit;
 
 namespace LRBalanceLock.Tests;
 

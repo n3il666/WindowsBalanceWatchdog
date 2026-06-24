@@ -9,7 +9,7 @@
     <AssemblyName>LRBalanceLock</AssemblyName>
     <RootNamespace>LRBalanceLock.App</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <GeneratedAppIcon>$(IntermediateOutputPath)app.ico</GeneratedAppIcon>
+    <GeneratedAppIcon>$(MSBuildProjectDirectory)/obj/$(Configuration)/$(TargetFramework)/$(RuntimeIdentifier)/generated-app.ico</GeneratedAppIcon>
     <ApplicationIcon>$(GeneratedAppIcon)</ApplicationIcon>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <SelfContained>true</SelfContained>
@@ -33,7 +33,11 @@
       <Using Namespace="System" />
       <Using Namespace="System.IO" />
       <Code Type="Fragment" Language="cs"><![CDATA[
-        Directory.CreateDirectory(Path.GetDirectoryName(OutputFile)!);
+        var outputDirectory = Path.GetDirectoryName(OutputFile);
+        if (!string.IsNullOrEmpty(outputDirectory))
+        {
+            Directory.CreateDirectory(outputDirectory);
+        }
         var base64 = File.ReadAllText(InputFile).Trim();
         File.WriteAllBytes(OutputFile, Convert.FromBase64String(base64));
       ]]></Code>
